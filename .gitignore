@@ -178,4 +178,6 @@ dist
 
 .turbo/
 
+.kiro
+
 packages/*/README.md

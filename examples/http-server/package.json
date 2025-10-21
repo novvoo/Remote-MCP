@@ -1,0 +1,18 @@
+{
+  "name": "@remote-mcp/example-http-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@remote-mcp/server": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.7.2"
+  }
+}

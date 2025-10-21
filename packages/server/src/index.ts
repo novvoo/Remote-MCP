@@ -6,3 +6,4 @@ export {
   ConsoleLogger,
 } from './logger.js';
 export type { AppRouter, RouterInputs, RouterOutputs } from './types.js';
+export { HTTPAdapter, type HTTPAdapterOptions } from './http-adapter.js';

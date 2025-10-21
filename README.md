@@ -70,6 +70,8 @@ Note: I don't want this to be a sophisticated or overcomplicated thing. This way
 
 Just put the following code in your MCP client settings, in here I'm using Claude as an example:
 
+#### tRPC Transport (Default)
+
 ```json
 {
   "mcpServers": {
@@ -84,6 +86,28 @@ Just put the following code in your MCP client settings, in here I'm using Claud
   }
 }
 ```
+
+#### HTTP Transport (JSON-RPC 2.0)
+
+For standard HTTP/JSON-RPC 2.0 servers:
+
+```json
+{
+  "mcpServers": {
+    "remote-mcp-http": {
+      "command": "npx",
+      "args": ["-y", "@remote-mcp/client"],
+      "env": {
+        "REMOTE_MCP_URL": "http://localhost:9513/mcp/http",
+        "REMOTE_MCP_TRANSPORT": "http",
+        "HTTP_HEADER_Authorization": "Bearer <token>"
+      }
+    }
+  }
+}
+```
+
+> **Note:** If the package is not yet published, see [Local Testing Guide](examples/http-server/LOCAL_TESTING.md) for instructions on testing with local builds.
 
 ### Code Your Own Local MCP Server
 
@@ -111,12 +135,15 @@ void client.start();
 
 You can see some examples in the `examples` directory.
 
-- [Cloudflare Workers](examples/cloudflare-workers)
-- [Standalone Node.js](examples/simple-server)
+- [Cloudflare Workers](examples/cloudflare-workers) - tRPC transport
+- [Standalone Node.js](examples/simple-server) - tRPC transport
+- [HTTP Server](examples/http-server) - HTTP/JSON-RPC 2.0 transport
 
 ### Code Your Own Remote MCP Server
 
-After `npm install @remote-mcp/server`, you can your own remote MCP server like the following:
+After `npm install @remote-mcp/server`, you can create your own remote MCP server.
+
+#### Option 1: tRPC Transport (Default)
 
 ```typescript
 import { MCPRouter, LogLevel } from "@remote-mcp/server";
@@ -181,6 +208,69 @@ void createHTTPServer({
 }).listen(Number(process.env.PORT || 9512));
 ```
 
+#### Option 2: HTTP Transport (JSON-RPC 2.0)
+
+For standard HTTP/JSON-RPC 2.0 protocol:
+
+```typescript
+import { createServer } from 'node:http';
+import { MCPRouter, LogLevel, HTTPAdapter } from "@remote-mcp/server";
+import { z } from "zod";
+
+// Create router instance
+const mcpRouter = new MCPRouter({
+  logLevel: LogLevel.DEBUG,
+  name: "example-server",
+  version: "1.0.0",
+  capabilities: {
+    logging: {},
+  },
+});
+
+// Add tools (same as tRPC version)
+mcpRouter.addTool(
+  "calculator",
+  {
+    description: "Perform basic calculations",
+    schema: z.object({
+      operation: z.enum(["add", "subtract", "multiply", "divide"]),
+      a: z.string(),
+      b: z.string(),
+    }),
+  },
+  async (args) => {
+    const a = Number(args.a);
+    const b = Number(args.b);
+    let result: number;
+    switch (args.operation) {
+      case "add": result = a + b; break;
+      case "subtract": result = a - b; break;
+      case "multiply": result = a * b; break;
+      case "divide":
+        if (b === 0) throw new Error("Division by zero");
+        result = a / b;
+        break;
+    }
+    return {
+      content: [{ type: "text", text: `${result}` }],
+    };
+  },
+);
+
+// Create HTTP adapter
+const httpAdapter = new HTTPAdapter({
+  router: mcpRouter,
+  path: '/mcp/http',
+  cors: true,
+});
+
+// Create HTTP server
+const server = createServer(httpAdapter.createHandler());
+server.listen(9513, () => {
+  console.log('HTTP MCP Server listening on http://localhost:9513/mcp/http');
+});
+```
+
 Then you can see like the following in your MCP client:
 
 <img src="https://github.com/user-attachments/assets/86cf500e-b937-47fc-9ac1-db106ab7a6a3" width="450">
@@ -201,10 +291,14 @@ This repository contains:
   - [x] Basic MCP Tool Support
   - [x] Basic MCP Prompt Support
   - [ ] Crash-Safe Handling (WIP, top priority)
+- [x] HTTP Transport Support
+  - [x] JSON-RPC 2.0 over HTTP
+  - [x] HTTP Adapter for servers
+  - [x] HTTP Client for connecting to external servers
 - [ ] Complete Event Subscription System
   - [ ] Resource change notifications
   - [ ] Tool/Prompt list change notifications
-- [ ] HTTP Header Support
+- [x] HTTP Header Support
   - [x] Custom Headers
   - [ ] Authentication Middleware
 - [ ] Basic error handling improvements

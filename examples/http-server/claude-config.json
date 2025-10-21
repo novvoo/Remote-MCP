@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "http-example-server": {
+      "command": "npx",
+      "args": ["-y", "@remote-mcp/client"],
+      "env": {
+        "REMOTE_MCP_URL": "http://localhost:9513/mcp/http",
+        "REMOTE_MCP_TRANSPORT": "http"
+      }
+    }
+  }
+}
