@@ -107,7 +107,6 @@ For standard HTTP/JSON-RPC 2.0 servers:
 }
 ```
 
-> **Note:** If the package is not yet published, see [Local Testing Guide](examples/http-server/LOCAL_TESTING.md) for instructions on testing with local builds.
 
 ### Code Your Own Local MCP Server
 
